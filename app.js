@@ -240,7 +240,7 @@ function normalizeMessages(messages) {
             text: message.text || "",
             createdAt: message.createdAt || new Date().toISOString(),
             pinned: Boolean(message.pinned),
-            reactions: Array.isArray(message.reactions) ? message.reactions : [],
+            reactions: Array.isArray(message.reactions) ? [...new Set(message.reactions)] : [],
             tags: Array.isArray(message.tags) ? message.tags : extractTags(message.text || ""),
             attachments: Array.isArray(message.attachments) ? message.attachments : []
         };
@@ -1021,12 +1021,15 @@ async function addReaction(messageId, channelId = state.activeChannelId) {
     const messages = (state.messagesByChannel.get(channelId) || []).map((message) => {
         if (message.id !== messageId) return message;
 
-        const reactions = message.reactions || [];
+        const reactions = Array.isArray(message.reactions) ? message.reactions : [];
+        const has = reactions.includes(emoji);
+        const newReactions = has
+            ? reactions.filter((item) => item !== emoji)
+            : [...new Set([...reactions, emoji])];
+
         return {
             ...message,
-            reactions: reactions.includes(emoji)
-                ? reactions.filter((item) => item !== emoji)
-                : [...reactions, emoji]
+            reactions: newReactions
         };
     });
 
@@ -1204,12 +1207,46 @@ function createEmbed(url) {
         return iframe;
     }
 
+    // Redgifs embeds (https://redgifs.com/watch/{id} -> https://redgifs.com/ifr/{id})
+    try {
+        const parsed = new URL(url);
+        const host = parsed.hostname.toLowerCase();
+        if (host.includes("redgifs.com") || host.includes("redgif.com")) {
+            const parts = parsed.pathname.split("/").filter(Boolean);
+            const id = parts.pop();
+            if (id) {
+                const iframe = document.createElement("iframe");
+                iframe.className = "embed";
+                iframe.src = `https://redgifs.com/ifr/${encodeURIComponent(id)}`;
+                iframe.title = "Embedded Redgifs video";
+                iframe.allow = "autoplay; encrypted-media; picture-in-picture";
+                iframe.allowFullscreen = true;
+                return iframe;
+            }
+        }
+    } catch (e) {
+        // ignore parse errors and fallthrough
+    }
+
+    // Video file embeds (mp4, webm, ogg)
     if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(url)) {
         const video = document.createElement("video");
         video.className = "embed";
         video.src = url;
         video.controls = true;
+        video.playsInline = true;
+        video.preload = "metadata";
         return video;
+    }
+
+    // Audio file embeds (mp3, wav, m4a, aac, ogg)
+    if (/\.(mp3|wav|m4a|aac|flac|ogg)(\?.*)?$/i.test(url)) {
+        const audio = document.createElement("audio");
+        audio.className = "embed";
+        audio.src = url;
+        audio.controls = true;
+        audio.preload = "metadata";
+        return audio;
     }
 
     return null;
