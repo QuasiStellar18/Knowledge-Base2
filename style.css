@@ -658,13 +658,53 @@ button {
     color: var(--muted);
 }
 
+.embedWrap {
+    width: min(720px, 100%);
+    margin-top: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius);
+    background: rgba(26, 27, 30, 0.9);
+    overflow: hidden;
+}
+
+.embedHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sourceLabel {
+    color: var(--muted);
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.embedOpen {
+    min-height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    cursor: pointer;
+}
+
+.embedOpen:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
 .embed {
     display: block;
-    width: min(720px, 100%);
+    width: 100%;
     aspect-ratio: 16 / 9;
-    margin-top: 8px;
+    margin: 0;
     border: 0;
-    border-radius: var(--radius);
     background: #111214;
 }
 
